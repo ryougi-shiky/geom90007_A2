@@ -60,9 +60,7 @@ server <- function(input, output, session) {
   output$map <- renderLeaflet({
     # Filter data for the selected year
     data_selected_year <- data %>%
-      filter(Year == input$selected_year) %>%
-      group_by(`State/Area`) %>%
-      summarize(`Percent (%) of Labor Force Unemployed in State/Area` = mean(`Percent (%) of Labor Force Unemployed in State/Area`, na.rm = TRUE))
+      filter(Year == input$selected_year)
     
     # Join the unemployment data with the spatial data
     map_data <- left_join(states_sf, data_selected_year, by = c("name" = "State/Area"))
@@ -82,8 +80,16 @@ server <- function(input, output, session) {
           fillOpacity = 1,
           bringToFront = TRUE
         ),
-        label = ~paste0(name, ": ", round(`Percent (%) of Labor Force Unemployed in State/Area`, 2), "%"),
-        labelOptions = labelOptions(style = list("font-weight" = "normal", padding = "3px 8px"), textsize = "15px", direction = "auto")
+        popup = ~paste0(
+          "<strong>State:</strong> ", name, "<br>",
+          "<strong>Unemployment Rate:</strong> ", round(`Percent (%) of Labor Force Unemployed in State/Area`, 2), "%<br>",
+          "<strong>Non-Institutional Population:</strong> ", `Total Civilian Non-Institutional Population in State/Area`, "<br>",
+          "<strong>Labor Force:</strong> ", `Total Civilian Labor Force in State/Area`, "<br>",
+          "<strong>Population Percentage:</strong> ", `Percent (%) of State/Area's Population`, "<br>",
+          "<strong>Employment:</strong> ", `Total Employment in State/Area`, "<br>",
+          "<strong>Employment Percentage:</strong> ", `Percent (%) of Labor Force Employed in State/Area`, "<br>",
+          "<strong>Unemployment:</strong> ", `Total Unemployment in State/Area`, "<br>"
+        )
       ) %>%
       addLegend(pal = colorQuantile("YlOrRd", map_data$`Percent (%) of Labor Force Unemployed in State/Area`, n = 5), 
                 values = ~`Percent (%) of Labor Force Unemployed in State/Area`, 
@@ -91,6 +97,8 @@ server <- function(input, output, session) {
                 position = "bottomright")
   })
 }
+
+
 
 # Run the Shiny app
 shinyApp(ui = ui, server = server)
