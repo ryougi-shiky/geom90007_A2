@@ -17,6 +17,7 @@ library(rnaturalearthdata)
 library(maps)
 library(readr)
 library(shinyjs)
+library(ggplot2)
 
 # Read the dataset
 data <- read_csv("data/Unemployment_in_America_Per_US_State.csv")
@@ -103,28 +104,97 @@ server <- function(input, output, session) {
   # Observe the button click and display the modal dialog
   observeEvent(input$clickedState, {
     clicked_state <- input$clickedState
-    selected_data <- filter(data, `State/Area` == clicked_state)
+    selected_year <- input$selected_year
     
-    details_text <- paste0(
-      "<strong>Non-Institutional Population:</strong> ", selected_data$`Total Civilian Non-Institutional Population in State/Area`, "<br>",
-      "<strong>Labor Force:</strong> ", selected_data$`Total Civilian Labor Force in State/Area`, "<br>",
-      "<strong>Population Percentage:</strong> ", selected_data$`Percent (%) of State/Area's Population`, "<br>",
-      "<strong>Employment:</strong> ", selected_data$`Total Employment in State/Area`, "<br>",
-      "<strong>Employment Percentage:</strong> ", selected_data$`Percent (%) of Labor Force Employed in State/Area`, "<br>",
-      "<strong>Unemployment:</strong> ", selected_data$`Total Unemployment in State/Area`, "<br>"
-    )
+    # Filter the data based on the clicked state and the selected year
+    selected_data <- filter(data, `State/Area` == clicked_state & Year == selected_year)
+    
+    # Convert the Month column to numeric
+    selected_data$Month <- as.numeric(selected_data$Month)
+    
+    # Render the line chart
+    output$lineChart <- renderPlot({
+      ggplot(selected_data, aes(x = Month)) +
+        geom_line(aes(y = `Total Unemployment in State/Area`, color = "Unemployment")) +
+        labs(y = "Population", color = "Legend") +
+        theme_minimal() +
+        scale_color_manual(values = c("Unemployment" = "red")) +
+        scale_x_continuous(breaks = 1:12) +  # Ensure x-axis has breaks from 1 to 12
+        ggtitle(paste0(clicked_state, " Unemployment Population in ", selected_year))  # Add title based on selected state and year
+    })
+    
+    # Render the first pie chart
+    output$pieChart1 <- renderPlot({
+      # Calculate the values for the pie chart
+      labor_force <- sum(selected_data$`Total Civilian Labor Force in State/Area`)
+      non_institutional_population <- sum(selected_data$`Total Civilian Non-Institutional Population in State/Area`)
+      
+      # Create a data frame for the pie chart
+      pie_data1 <- data.frame(
+        category = c("Labor Force", "Others"),
+        value = c(labor_force, non_institutional_population - labor_force)
+      )
+      
+      # Plot the pie chart
+      ggplot(pie_data1, aes(x = "", y = value, fill = category)) +
+        geom_bar(width = 1, stat = "identity") +
+        coord_polar("y") +
+        labs(fill = "Population Status") +
+        theme_minimal() +
+        theme(
+          axis.text.x = element_blank(),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          panel.grid = element_blank(),
+          axis.ticks = element_blank()
+        ) +
+        ggtitle(paste0("Proportion of Labor Force in ", clicked_state, " for ", selected_year))
+    })
+    
+    # Render the second pie chart
+    output$pieChart2 <- renderPlot({
+      # Calculate the values for the pie chart
+      labor_force <- sum(selected_data$`Total Civilian Labor Force in State/Area`)
+      employed <- sum(selected_data$`Total Employment in State/Area`)
+      unemployed <- labor_force - employed
+      
+      # Create a data frame for the pie chart
+      pie_data2 <- data.frame(
+        category = c("Employed", "Unemployed"),
+        value = c(employed, unemployed)
+      )
+      
+      # Plot the pie chart
+      ggplot(pie_data2, aes(x = "", y = value, fill = category)) +
+        geom_bar(width = 1, stat = "identity") +
+        coord_polar("y") +
+        labs(fill = "Employment Status") +
+        theme_minimal() +
+        theme(
+          axis.text.x = element_blank(),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          panel.grid = element_blank(),
+          axis.ticks = element_blank()
+        ) +
+        ggtitle(paste0("Employment Status in ", clicked_state, " for ", selected_year))
+    })
     
     showModal(modalDialog(
-      title = "Detailed Information",
-      HTML(details_text),
+      title = paste0("Detailed Information for ", clicked_state),
+      plotOutput("lineChart"),  # Line chart to show the state's unemployment rate for each month in selected year
+      # Pie chart to show  Percent (%) of Labor Force Unemployed in State/Area and 
+      # Total Employment in State/Area in Total Civilian Labor Force in State/Area
+      plotOutput("pieChart1"),  # First pie chart
+      plotOutput("pieChart2"),  # Second pie chart
       easyClose = TRUE,
       footer = tagList(
         modalButton("Close")
       )
     ))
   })
+  
 }
-
 
 # Run the Shiny app
 shinyApp(ui = ui, server = server)
