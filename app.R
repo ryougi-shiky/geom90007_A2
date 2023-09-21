@@ -16,6 +16,7 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(maps)
 library(readr)
+library(shinyjs)
 
 # Read the dataset
 data <- read_csv("data/Unemployment_in_America_Per_US_State.csv")
@@ -25,6 +26,8 @@ states_sf <- ne_states(country = "United States of America", returnclass = "sf")
 
 # UI
 ui <- fluidPage(
+  # Extend shiny with custom JavaScript functions
+  shinyjs::useShinyjs(),
   tags$head(
     tags$style(HTML("
       body {
@@ -35,7 +38,12 @@ ui <- fluidPage(
         height: 100%;
         padding: 0;
       }
-    "))
+    ")),
+    tags$script("
+      function showDetails(stateName) {
+        Shiny.setInputValue('clickedState', stateName);
+      }
+    ")
   ),
   titlePanel(h1("Unemployment Rate in US", align="center")),
   
@@ -83,12 +91,7 @@ server <- function(input, output, session) {
         popup = ~paste0(
           "<strong>State:</strong> ", name, "<br>",
           "<strong>Unemployment Rate:</strong> ", round(`Percent (%) of Labor Force Unemployed in State/Area`, 2), "%<br>",
-          "<strong>Non-Institutional Population:</strong> ", `Total Civilian Non-Institutional Population in State/Area`, "<br>",
-          "<strong>Labor Force:</strong> ", `Total Civilian Labor Force in State/Area`, "<br>",
-          "<strong>Population Percentage:</strong> ", `Percent (%) of State/Area's Population`, "<br>",
-          "<strong>Employment:</strong> ", `Total Employment in State/Area`, "<br>",
-          "<strong>Employment Percentage:</strong> ", `Percent (%) of Labor Force Employed in State/Area`, "<br>",
-          "<strong>Unemployment:</strong> ", `Total Unemployment in State/Area`, "<br>"
+          "<button onclick='showDetails(\"", name, "\")'>Details</button>"
         )
       ) %>%
       addLegend(pal = colorQuantile("YlOrRd", map_data$`Percent (%) of Labor Force Unemployed in State/Area`, n = 5), 
@@ -96,8 +99,31 @@ server <- function(input, output, session) {
                 title = "Unemployment Rate",
                 position = "bottomright")
   })
+  
+  # Observe the button click and display the modal dialog
+  observeEvent(input$clickedState, {
+    clicked_state <- input$clickedState
+    selected_data <- filter(data, `State/Area` == clicked_state)
+    
+    details_text <- paste0(
+      "<strong>Non-Institutional Population:</strong> ", selected_data$`Total Civilian Non-Institutional Population in State/Area`, "<br>",
+      "<strong>Labor Force:</strong> ", selected_data$`Total Civilian Labor Force in State/Area`, "<br>",
+      "<strong>Population Percentage:</strong> ", selected_data$`Percent (%) of State/Area's Population`, "<br>",
+      "<strong>Employment:</strong> ", selected_data$`Total Employment in State/Area`, "<br>",
+      "<strong>Employment Percentage:</strong> ", selected_data$`Percent (%) of Labor Force Employed in State/Area`, "<br>",
+      "<strong>Unemployment:</strong> ", selected_data$`Total Unemployment in State/Area`, "<br>"
+    )
+    
+    showModal(modalDialog(
+      title = "Detailed Information",
+      HTML(details_text),
+      easyClose = TRUE,
+      footer = tagList(
+        modalButton("Close")
+      )
+    ))
+  })
 }
-
 
 
 # Run the Shiny app
