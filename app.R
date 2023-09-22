@@ -21,7 +21,9 @@ library(shinyjs)
 library(plotly)
 
 # Read the dataset
-data <- read_csv("data/Unemployment_in_America_Per_US_State.csv")
+data <- read_csv("data/Unemployment_in_America_Per_US_State.csv") %>%
+  filter(Year >= 2010)
+
 
 # Get the spatial data for US states
 states_sf <- ne_states(country = "United States of America", returnclass = "sf")
@@ -39,6 +41,12 @@ ui <- fluidPage(
       .container-fluid {
         height: 100%;
         padding: 0;
+      }
+      .plotly.html-widget {
+        margin-bottom: 30px;  # Adjust this value as needed
+      }
+      .plotly .g-gtitle {
+        margin-bottom: 30px !important;  # Adjust this value as needed
       }
     ")),
     tags$script("
@@ -118,6 +126,7 @@ server <- function(input, output, session) {
       plot_ly(selected_data, x = ~Month, y = ~`Total Unemployment in State/Area`, type = 'scatter', mode = 'lines', color = ~"Unemployment", colors = c("red")) %>%
         layout(title = paste0(clicked_state, " Unemployment Population in ", selected_year))
     })
+
     
     # Render the first pie chart using plotly
     output$pieChart1 <- renderPlotly({
@@ -141,7 +150,7 @@ server <- function(input, output, session) {
         value = c(avg_employed, avg_unemployed)
       )
       plot_ly(pie_data2, labels = ~category, values = ~value, type = 'pie') %>%
-        layout(title = paste0("Average Employment Status in ", clicked_state, " for ", selected_year))
+        layout(title = paste0("Average Employment Status For Labor Force<br> in ", clicked_state, " for ", selected_year))
     })
     
     
