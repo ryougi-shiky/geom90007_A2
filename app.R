@@ -14,7 +14,6 @@ data <- read_csv("data/Unemployment_in_America_Per_US_State.csv")
 states_sf <-
   ne_states(country = "United States of America", returnclass = "sf")
 
-
 # UI
 ui <- fluidPage(
   # Use custom JavaScript functions in shiny
@@ -23,7 +22,8 @@ ui <- fluidPage(
     tags$style(
       HTML(
         "
-      body {
+      /* Adjust map size and margin */
+      body { 
         margin: 5px;
         padding: 0;
       }
@@ -31,20 +31,24 @@ ui <- fluidPage(
         height: 100%;
         padding: 0;
       }
-      .plotly.html-widget {
+      /* Adjust charts margin */
+      .plotly.html-widget { 
         margin-bottom: 30px;
       }
       .plotly .g-gtitle {
         margin-bottom: 30px !important;
       }
-      .map-title {
+      /* Adjust map title position */
+      .map-title { 
         transform: translateX(-50%);
         right: 50% !important;
       }
-      #aboutBtn {
+      /* About button background color */
+      #aboutBtn { 
             background-color: rgba(255, 255, 255, 0.7);
-        }
-      .modal-backdrop {
+      }
+      /* Modal background color */
+      .modal-backdrop { 
             opacity: 0.7 !important;
         }
       .modal-content {
@@ -55,7 +59,8 @@ ui <- fluidPage(
     ),
     tags$script(
       "
-      function showDetails(stateName) {
+      /* Click area to get state name */
+      function showDetails(stateName) { 
         Shiny.setInputValue('clickedState', stateName);
       }
     "
@@ -68,6 +73,7 @@ ui <- fluidPage(
                border-radius: 10px;
              }
              "),
+  # Set the app's background to light grey
   tags$head(tags$style(
     HTML("
     body {
@@ -106,12 +112,13 @@ server <- function(input, output, session) {
     # Join the unemployment data with the spatial data
     map_data <-
       left_join(states_sf, data_selected_year, by = c("name" = "State/Area"))
-    nrow(map_data)
-    
+
     leaflet(data = map_data) %>%
+      # Set map start view position and zoom status
       setView(lng = -98.583,
               lat = 39.833,
               zoom = 4) %>%
+      # Set map color theme
       addProviderTiles("CartoDB.Positron") %>%
       addPolygons(
         fillColor = ~ colorQuantile(
@@ -129,7 +136,7 @@ server <- function(input, output, session) {
           fillOpacity = 1,
           bringToFront = TRUE
         ),
-        # Click area, pop up
+        # Click area, pop up the box to show state name and its Unemployment Rate
         popup = ~ paste0(
           "<strong>State:</strong> ",
           name,
@@ -142,13 +149,10 @@ server <- function(input, output, session) {
           "\")'>Details</button>"
         )
       ) %>%
-      # addLegend(pal = colorQuantile("Blues", map_data$`Percent (%) of Labor Force Unemployed in State/Area`, n = 5),
-      #           values = ~`Percent (%) of Labor Force Unemployed in State/Area`,
-      #           title = "Unemployment Population",
-      #           position = "bottomright",
-      #           opacity = 1) %>%
+      
+      # Add map title
       addControl(
-        html = tags$div(style = "background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 5px;
+        html = tags$div(style = "background-color: rgba(255, 255, 255, 0.6); padding: 5px; border-radius: 5px;
                         font-size: 24px;", "Unemployment Status in US"),
         position = "topright",
         className = "map-title"
@@ -160,7 +164,7 @@ server <- function(input, output, session) {
     showModal(aboutModal())
   })
   
-  # About window
+  # About window prints the description of this app and acknowledge from author
   aboutModal <- function() {
     modalDialog(
       title = "About this App",
@@ -206,7 +210,7 @@ server <- function(input, output, session) {
   }
   
   
-  # click detail button and display the modal
+  # click detail button and pop out the modal
   observeEvent(input$clickedState, {
     clicked_state <- input$clickedState
     selected_year <- input$selected_year
@@ -219,6 +223,7 @@ server <- function(input, output, session) {
     selected_data$Month <- as.numeric(selected_data$Month)
     
     # Render the first line chart 
+    # Display the monthly unemployment population during selected year
     output$lineChart <- renderPlotly({
       plot_ly(
         selected_data,
@@ -245,15 +250,19 @@ server <- function(input, output, session) {
     })
     
     # Render the first pie chart
+    # Show the Labor Force population in whole population
     output$pieChart1 <- renderPlotly({
+      # Get Total Civilian Labor Force
       avg_labor_force <-
         round(mean(selected_data$`Total Civilian Labor Force in State/Area`))
+      # Get Total Civilian Non-Institutional Population
       avg_non_institutional_population <-
         round(
           mean(
             selected_data$`Total Civilian Non-Institutional Population in State/Area`
           )
         )
+      # Prepare the data used in pie chart
       pie_data1 <- data.frame(
         category = c("Labor Force", "Others"),
         value = c(
@@ -286,11 +295,14 @@ server <- function(input, output, session) {
     
     # Render the second pie chart
     output$pieChart2 <- renderPlotly({
+      # Labor Force population = employed + unemployed
+      # Calculate the population of employed and unemployed
       avg_labor_force <-
         round(mean(selected_data$`Total Civilian Labor Force in State/Area`))
       avg_employed <-
         round(mean(selected_data$`Total Employment in State/Area`))
       avg_unemployed <- avg_labor_force - avg_employed
+      # Draw pie chart for employed and unemployed
       pie_data2 <- data.frame(
         category = c("Employed", "Unemployed"),
         value = c(avg_employed, avg_unemployed)
@@ -327,7 +339,7 @@ server <- function(input, output, session) {
         2
       ))
     
-    # Render the trend of average unemployment rate line chart
+    # Render the line chart about overall change of average unemployment rate in all years
     output$overallUnemploymentRateChart <- renderPlotly({
       plot_ly(
         year_unemployment_rate,
@@ -350,7 +362,7 @@ server <- function(input, output, session) {
         )
     })
     
-    
+    # The detail modal shows 4 charts we implemented above
     showModal(
       modalDialog(
         title = paste0("Detailed Information for ", clicked_state),
