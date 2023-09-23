@@ -24,6 +24,9 @@ library(plotly)
 data <- read_csv("data/Unemployment_in_America_Per_US_State.csv") %>%
   filter(Year >= 2010)
 
+# Determine the minimum and maximum unemployment population from the data
+min_unemployment_pop <- min(data$`Total Unemployment in State/Area`, na.rm = TRUE)
+max_unemployment_pop <- max(data$`Total Unemployment in State/Area`, na.rm = TRUE)
 
 # Get the spatial data for US states
 states_sf <- ne_states(country = "United States of America", returnclass = "sf")
@@ -49,6 +52,10 @@ ui <- fluidPage(
       .plotly .g-gtitle {
         margin-bottom: 30px !important;  # Adjust this value as needed
       }
+      .map-title {
+        transform: translateX(-50%);
+        right: 50% !important;
+      }
     ")),
     tags$script("
       function showDetails(stateName) {
@@ -72,12 +79,9 @@ ui <- fluidPage(
   leafletOutput(outputId = "map", width = "100%", height = "98vh"),  # Set map width and height
   
   # Absolute panel for dropdown menu
-  absolutePanel(id = "control-panel", bottom = 10, left = 10, width = 200, 
-                div(class = "dropup",
-                    selectInput("selected_year", "Select Year:", choices = rev(unique(data$Year)))
-                )
+  absolutePanel(id = "control-panel", top = 15, left = 70, width = 80, 
+                selectInput("selected_year", "Select Year:", choices = rev(unique(data$Year)))
   )
-  
 )
 
 # Server
@@ -96,7 +100,7 @@ server <- function(input, output, session) {
       setView(lng = -98.583, lat = 39.833, zoom = 4) %>%
       addProviderTiles("CartoDB.Positron") %>%
       addPolygons(
-        fillColor = ~colorQuantile("YlOrRd", `Percent (%) of Labor Force Unemployed in State/Area`, n = 5)(`Percent (%) of Labor Force Unemployed in State/Area`),
+        fillColor = ~colorQuantile("Blues", `Percent (%) of Labor Force Unemployed in State/Area`, n = 5)(`Percent (%) of Labor Force Unemployed in State/Area`),
         weight = 1,
         opacity = 1,
         color = "white",
@@ -113,10 +117,17 @@ server <- function(input, output, session) {
           "<button onclick='showDetails(\"", name, "\")'>Details</button>"
         )
       ) %>%
-      addLegend(pal = colorQuantile("YlOrRd", map_data$`Percent (%) of Labor Force Unemployed in State/Area`, n = 5), 
-                values = ~`Percent (%) of Labor Force Unemployed in State/Area`, 
-                title = "Unemployment Rate",
-                position = "bottomright")
+      # addLegend(pal = colorQuantile("Blues", map_data$`Percent (%) of Labor Force Unemployed in State/Area`, n = 5), 
+      #           values = ~`Percent (%) of Labor Force Unemployed in State/Area`, 
+      #           title = "Unemployment Population",
+      #           position = "bottomright",
+      #           opacity = 1) %>%
+      addControl(
+        html = tags$div(style = "background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 5px; 
+                        font-size: 24px;", "Unemployment Status in US"),
+        position = "topright",
+        className = "map-title"
+      )
   })
   
   # Observe the button click and display the modal dialog
@@ -130,13 +141,14 @@ server <- function(input, output, session) {
     # Convert the Month column to numeric
     selected_data$Month <- as.numeric(selected_data$Month)
     
+    # ... [rest of the code remains unchanged]
+    
     # Render the line chart using plotly
     output$lineChart <- renderPlotly({
-      plot_ly(selected_data, x = ~Month, y = ~`Total Unemployment in State/Area`, type = 'scatter', mode = 'lines', color = ~"Unemployment", colors = c("red")) %>%
+      plot_ly(selected_data, x = ~Month, y = ~`Total Unemployment in State/Area`, type = 'scatter', mode = 'lines', color = ~"Unemployment", colors = c("steelblue")) %>%
         layout(title = paste0(clicked_state, " Unemployment Population in ", selected_year),
                margin = list(t = 80, b = 20, l = 60, r = 10))
     })
-    
     
     # Render the first pie chart using plotly
     output$pieChart1 <- renderPlotly({
@@ -146,7 +158,8 @@ server <- function(input, output, session) {
         category = c("Labor Force", "Others"),
         value = c(avg_labor_force, avg_non_institutional_population - avg_labor_force)
       )
-      plot_ly(pie_data1, labels = ~category, values = ~value, type = 'pie') %>%
+      plot_ly(pie_data1, labels = ~category, values = ~value, type = 'pie', 
+              marker = list(colors = c("lightblue", "deepskyblue"))) %>%
         layout(title = paste0("Average Proportion of Labor Force in ", clicked_state, " for ", selected_year),
                margin = list(t = 80, b = 20, l = 60, r = 10))
     })
@@ -160,10 +173,15 @@ server <- function(input, output, session) {
         category = c("Employed", "Unemployed"),
         value = c(avg_employed, avg_unemployed)
       )
-      plot_ly(pie_data2, labels = ~category, values = ~value, type = 'pie') %>%
+      plot_ly(pie_data2, labels = ~category, values = ~value, type = 'pie', 
+              marker = list(colors = c("cornflowerblue", "midnightblue"))) %>%
         layout(title = paste0("Average Employment Status in ", clicked_state, " for ", selected_year),
                margin = list(t = 80, b = 20, l = 60, r = 10))
     })
+    
+    # ... [rest of the code remains unchanged]
+    
+    
     
     
     showModal(modalDialog(
