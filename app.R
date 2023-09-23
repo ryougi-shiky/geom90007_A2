@@ -27,6 +27,8 @@ data <- read_csv("data/Unemployment_in_America_Per_US_State.csv") %>%
 
 # Get the spatial data for US states
 states_sf <- ne_states(country = "United States of America", returnclass = "sf")
+states_sf <- st_as_sf(states_sf)
+states_sf <- st_simplify(states_sf, dTolerance=0.01)
 
 # UI
 ui <- fluidPage(
@@ -63,8 +65,13 @@ ui <- fluidPage(
                border-radius: 10px;
              }
              "),
+  tags$head(tags$style(HTML("
+    body {
+      background-color: #EBEBEB;
+    }
+  "))),
   
-  leafletOutput("map", width = "100%", height = "92vh"),  # Set map width and height
+  leafletOutput(outputId = "map", width = "100%", height = "91vh"),  # Set map width and height
   
   # Absolute panel for dropdown menu
   absolutePanel(id = "control-panel", top = 85, left = 70, width = 90, 
@@ -82,6 +89,7 @@ server <- function(input, output, session) {
     
     # Join the unemployment data with the spatial data
     map_data <- left_join(states_sf, data_selected_year, by = c("name" = "State/Area"))
+    nrow(map_data)
     
     leaflet(data = map_data) %>%
       setView(lng = -98.583, lat = 39.833, zoom = 4) %>%
