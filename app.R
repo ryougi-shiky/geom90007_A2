@@ -21,8 +21,7 @@ library(shinyjs)
 library(plotly)
 
 # Read the dataset
-data <- read_csv("data/Unemployment_in_America_Per_US_State.csv") %>%
-  filter(Year >= 2010)
+data <- read_csv("data/Unemployment_in_America_Per_US_State.csv") 
 
 # Determine the minimum and maximum unemployment population from the data
 min_unemployment_pop <- min(data$`Total Unemployment in State/Area`, na.rm = TRUE)
@@ -76,7 +75,7 @@ ui <- fluidPage(
     }
   "))),
   
-  leafletOutput(outputId = "map", width = "100%", height = "98vh"),  # Set map width and height
+  leafletOutput(outputId = "map", width = "100%", height = "98.5vh"),  # Set map width and height
   
   # Absolute panel for dropdown menu
   absolutePanel(id = "control-panel", top = 15, left = 70, width = 80, 
@@ -141,8 +140,6 @@ server <- function(input, output, session) {
     # Convert the Month column to numeric
     selected_data$Month <- as.numeric(selected_data$Month)
     
-    # ... [rest of the code remains unchanged]
-    
     # Render the line chart using plotly
     output$lineChart <- renderPlotly({
       plot_ly(selected_data, x = ~Month, y = ~`Total Unemployment in State/Area`, type = 'scatter', mode = 'lines', color = ~"Unemployment", colors = c("steelblue")) %>%
@@ -179,9 +176,20 @@ server <- function(input, output, session) {
                margin = list(t = 80, b = 20, l = 60, r = 10))
     })
     
-    # ... [rest of the code remains unchanged]
+    # Calculate the average unemployment rate for each year for the clicked state
+    year_unemployment_rate <- data %>%
+      filter(`State/Area` == clicked_state) %>%
+      group_by(Year) %>%
+      summarize(Avg_Unemployment_Rate = round(mean(`Percent (%) of Labor Force Unemployed in State/Area`, na.rm = TRUE), 2))
     
-    
+    # Render the trend of average unemployment rate line chart using plotly
+    output$overallUnemploymentRateChart <- renderPlotly({
+      plot_ly(year_unemployment_rate, x = ~Year, y = ~Avg_Unemployment_Rate, type = 'scatter', mode = 'lines+markers', line = list(color = "#1E90FF")) %>%
+        layout(title = paste0(clicked_state, " Overall Unemployment Rate"),
+               xaxis = list(title = "Year"),
+               yaxis = list(title = "Unemployment Rate (%)"),
+               margin = list(t = 80, b = 20, l = 60, r = 10))
+    })
     
     
     showModal(modalDialog(
@@ -189,6 +197,7 @@ server <- function(input, output, session) {
       plotlyOutput("lineChart"),
       plotlyOutput("pieChart1"),
       plotlyOutput("pieChart2"),
+      plotlyOutput("overallUnemploymentRateChart"), 
       easyClose = TRUE,
       footer = tagList(
         modalButton("Close")
