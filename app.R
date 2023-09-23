@@ -1,42 +1,28 @@
-# Install and load necessary packages
-# list_packages <- c("shiny", "ggplot2", "dplyr", "leaflet", "sf", "maps", "readr", "devtools", "rnaturalearth", "rnaturalearthdata", "ropensci/rnaturalearthhires")
-# new_packages <- list_packages[!(list_packages %in% installed.packages()[,"Package"])]
-# if(length(new_packages)) install.packages(new_packages)
+library(shiny) # Shiny app
+library(dplyr) # Manipulate data
+library(leaflet) # Draw map
+library(sf) # spatial data structure
+library(rnaturalearth) # Fetch spatial data
+library(readr) # Read data set
+library(shinyjs) # Use Javascript functions
+library(plotly) # Render interactive plots
 
-# devtools::install_github("ropensci/rnaturalearthhires")
-
-# update.packages(ask = FALSE)
-
-# Libraries
-# Libraries
-library(shiny)
-library(dplyr)
-library(leaflet)
-library(sf)
-library(rnaturalearth)
-library(rnaturalearthdata)
-library(maps)
-library(readr)
-library(shinyjs)
-library(plotly)
-
-# Read the dataset
-data <- read_csv("data/Unemployment_in_America_Per_US_State.csv") 
-
-# Determine the minimum and maximum unemployment population from the data
-min_unemployment_pop <- min(data$`Total Unemployment in State/Area`, na.rm = TRUE)
-max_unemployment_pop <- max(data$`Total Unemployment in State/Area`, na.rm = TRUE)
+# Read the data set
+data <- read_csv("data/Unemployment_in_America_Per_US_State.csv")
 
 # Get the spatial data for US states
-states_sf <- ne_states(country = "United States of America", returnclass = "sf")
+states_sf <-
+  ne_states(country = "United States of America", returnclass = "sf")
 
 
 # UI
 ui <- fluidPage(
-  # Extend shiny with custom JavaScript functions
+  # Use custom JavaScript functions in shiny
   shinyjs::useShinyjs(),
   tags$head(
-    tags$style(HTML("
+    tags$style(
+      HTML(
+        "
       body {
         margin: 5px;
         padding: 0;
@@ -46,72 +32,93 @@ ui <- fluidPage(
         padding: 0;
       }
       .plotly.html-widget {
-        margin-bottom: 30px;  # Adjust this value as needed
+        margin-bottom: 30px;
       }
       .plotly .g-gtitle {
-        margin-bottom: 30px !important;  # Adjust this value as needed
+        margin-bottom: 30px !important;
       }
       .map-title {
         transform: translateX(-50%);
         right: 50% !important;
       }
       #aboutBtn {
-            background-color: rgba(255, 255, 255, 0.7); 
+            background-color: rgba(255, 255, 255, 0.7);
         }
       .modal-backdrop {
-            opacity: 0.7 !important;  
+            opacity: 0.7 !important;
         }
       .modal-content {
-          background-color: rgba(255, 255, 255, 0.8) !important;  
+          background-color: rgba(255, 255, 255, 0.8) !important;
       }
-    ")),
-    tags$script("
+    "
+      )
+    ),
+    tags$script(
+      "
       function showDetails(stateName) {
         Shiny.setInputValue('clickedState', stateName);
       }
-    ")
+    "
+    )
   ),
   
-  # Custom CSS for the transparent dropdown menu
+  # CSS for the transparent drop down menu
   tags$style(type = "text/css", "
              #control-panel {
                border-radius: 10px;
              }
              "),
-  tags$head(tags$style(HTML("
+  tags$head(tags$style(
+    HTML("
     body {
       background-color: #EBEBEB;
     }
-  "))),
+  ")
+  )),
   
-  leafletOutput(outputId = "map", width = "100%", height = "98.5vh"),  # Set map width and height
-  
-  # Absolute panel for dropdown menu
-  absolutePanel(id = "control-panel", top = 15, left = 70, width = 80, 
-                selectInput("selected_year", "Select Year:", choices = rev(unique(data$Year)))
+  # Set map width and height
+  leafletOutput(
+    outputId = "map",
+    width = "100%",
+    height = "98.5vh"
   ),
   
-  # About button to show About page
+  # Absolute panel for drop down menu
+  absolutePanel(
+    id = "control-panel",
+    top = 15,
+    left = 70,
+    width = 80,
+    selectInput("selected_year", "Select Year:", choices = rev(unique(data$Year)))
+  ),
+  
+  # About button
   actionButton("aboutBtn", "About", style = "position: absolute; bottom: 13px; left: 10px;")
 )
 
 # Server
 server <- function(input, output, session) {
-  
   output$map <- renderLeaflet({
     # Filter data for the selected year
     data_selected_year <- data %>%
       filter(Year == input$selected_year)
     
     # Join the unemployment data with the spatial data
-    map_data <- left_join(states_sf, data_selected_year, by = c("name" = "State/Area"))
+    map_data <-
+      left_join(states_sf, data_selected_year, by = c("name" = "State/Area"))
     nrow(map_data)
     
     leaflet(data = map_data) %>%
-      setView(lng = -98.583, lat = 39.833, zoom = 4) %>%
+      setView(lng = -98.583,
+              lat = 39.833,
+              zoom = 4) %>%
       addProviderTiles("CartoDB.Positron") %>%
       addPolygons(
-        fillColor = ~colorQuantile("Blues", `Percent (%) of Labor Force Unemployed in State/Area`, n = 5)(`Percent (%) of Labor Force Unemployed in State/Area`),
+        fillColor = ~ colorQuantile(
+          "Blues",
+          `Percent (%) of Labor Force Unemployed in State/Area`,
+          n = 5
+        )(`Percent (%) of Labor Force Unemployed in State/Area`),
         weight = 1,
         opacity = 1,
         color = "white",
@@ -122,134 +129,239 @@ server <- function(input, output, session) {
           fillOpacity = 1,
           bringToFront = TRUE
         ),
-        popup = ~paste0(
-          "<strong>State:</strong> ", name, "<br>",
-          "<strong>Unemployment Rate:</strong> ", round(`Percent (%) of Labor Force Unemployed in State/Area`, 2), "%<br>",
-          "<button onclick='showDetails(\"", name, "\")'>Details</button>"
+        # Click area, pop up
+        popup = ~ paste0(
+          "<strong>State:</strong> ",
+          name,
+          "<br>",
+          "<strong>Unemployment Rate:</strong> ",
+          round(`Percent (%) of Labor Force Unemployed in State/Area`, 2),
+          "%<br>",
+          "<button onclick='showDetails(\"",
+          name,
+          "\")'>Details</button>"
         )
       ) %>%
-      # addLegend(pal = colorQuantile("Blues", map_data$`Percent (%) of Labor Force Unemployed in State/Area`, n = 5), 
-      #           values = ~`Percent (%) of Labor Force Unemployed in State/Area`, 
+      # addLegend(pal = colorQuantile("Blues", map_data$`Percent (%) of Labor Force Unemployed in State/Area`, n = 5),
+      #           values = ~`Percent (%) of Labor Force Unemployed in State/Area`,
       #           title = "Unemployment Population",
       #           position = "bottomright",
       #           opacity = 1) %>%
       addControl(
-        html = tags$div(style = "background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 5px; 
+        html = tags$div(style = "background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 5px;
                         font-size: 24px;", "Unemployment Status in US"),
         position = "topright",
         className = "map-title"
       )
   })
   
+  # Click About button, pop out About window
   observeEvent(input$aboutBtn, {
     showModal(aboutModal())
   })
   
+  # About window
   aboutModal <- function() {
     modalDialog(
       title = "About this App",
       tagList(
         tags$h4("GEOM90007 Assignment 2: Interactive Data Visualisation in R"),
-        tags$p("This Shiny app visualizes unemployment data in the US from 1976 to 2022."),
+        tags$p(
+          "This Shiny app visualizes unemployment data in the US from 1976 to 2022."
+        ),
         tags$hr(),
         tags$h4("How to use this app?"),
         tags$p("Select year to see the data in specified year."),
-        tags$p("Click the state area on the map to see the unemployment rate in selected year."),
-        tags$p("Click 'Details' to see the detailed unemployment information about this state."),
+        tags$p(
+          "Click the state area on the map to see the unemployment rate in selected year."
+        ),
+        tags$p(
+          "Click 'Details' to see the detailed unemployment information about this state."
+        ),
         tags$h4("What do these charts mean?"),
-        tags$p("The 1st line chart shows the monthly unemployment population for the selected state and year."),
-        tags$p("The 1st pie chart provides the proportion of the labor force for the selected state and year."),
-        tags$p("The 2nd pie chart presents the employment status for the selected state and year."),
-        tags$p("The 2nd line chart illustrates the overall unemployment rate change of average unemployment rates over the years."),
+        tags$p(
+          "The 1st line chart shows the monthly unemployment population for the selected state and year."
+        ),
+        tags$p(
+          "The 1st pie chart provides the proportion of the labor force for the selected state and year."
+        ),
+        tags$p(
+          "The 2nd pie chart presents the employment and unemployment proportion for the selected state and year."
+        ),
+        tags$p(
+          "The 2nd line chart illustrates the overall change of average unemployment rates over the years."
+        ),
         tags$hr(),
         tags$h4("Developed By"),
         tags$p("Author: Hongda Zhu"),
         tags$p("Institution: The University of Melbourne"),
         tags$p("Student ID: 1259524"),
-        tags$p("Data Reference: https://www.kaggle.com/datasets/justin2028/unemployment-in-america-per-us-state"),
+        tags$p(
+          "Data Reference: https://www.kaggle.com/datasets/justin2028/unemployment-in-america-per-us-state"
+        ),
       ),
       easyClose = TRUE,
-      footer = tagList(
-        modalButton("Close")
-      )
+      footer = tagList(modalButton("Close"))
     )
   }
   
   
-  # Observe the button click and display the modal dialog
+  # click detail button and display the modal
   observeEvent(input$clickedState, {
     clicked_state <- input$clickedState
     selected_year <- input$selected_year
     
     # Filter the data based on the clicked state and the selected year
-    selected_data <- filter(data, `State/Area` == clicked_state & Year == selected_year)
+    selected_data <-
+      filter(data, `State/Area` == clicked_state & Year == selected_year)
     
     # Convert the Month column to numeric
     selected_data$Month <- as.numeric(selected_data$Month)
     
-    # Render the line chart using plotly
+    # Render the first line chart 
     output$lineChart <- renderPlotly({
-      plot_ly(selected_data, x = ~Month, y = ~`Total Unemployment in State/Area`, type = 'scatter', mode = 'lines', color = ~"Unemployment", colors = c("steelblue")) %>%
-        layout(title = paste0(clicked_state, " Unemployment Population in ", selected_year),
-               margin = list(t = 80, b = 20, l = 60, r = 10))
+      plot_ly(
+        selected_data,
+        x = ~ Month,
+        y = ~ `Total Unemployment in State/Area`,
+        type = 'scatter',
+        mode = 'lines',
+        color = ~ "Unemployment",
+        colors = c("steelblue")
+      ) %>%
+        layout(
+          title = paste0(
+            clicked_state,
+            " Unemployment Population in ",
+            selected_year
+          ),
+          margin = list(
+            t = 80,
+            b = 20,
+            l = 60,
+            r = 10
+          )
+        )
     })
     
-    # Render the first pie chart using plotly
+    # Render the first pie chart
     output$pieChart1 <- renderPlotly({
-      avg_labor_force <- round(mean(selected_data$`Total Civilian Labor Force in State/Area`))
-      avg_non_institutional_population <- round(mean(selected_data$`Total Civilian Non-Institutional Population in State/Area`))
+      avg_labor_force <-
+        round(mean(selected_data$`Total Civilian Labor Force in State/Area`))
+      avg_non_institutional_population <-
+        round(
+          mean(
+            selected_data$`Total Civilian Non-Institutional Population in State/Area`
+          )
+        )
       pie_data1 <- data.frame(
         category = c("Labor Force", "Others"),
-        value = c(avg_labor_force, avg_non_institutional_population - avg_labor_force)
+        value = c(
+          avg_labor_force,
+          avg_non_institutional_population - avg_labor_force
+        )
       )
-      plot_ly(pie_data1, labels = ~category, values = ~value, type = 'pie', 
-              marker = list(colors = c("lightblue", "deepskyblue"))) %>%
-        layout(title = paste0("Average Proportion of Labor Force in ", clicked_state, " for ", selected_year),
-               margin = list(t = 80, b = 20, l = 60, r = 10))
+      plot_ly(
+        pie_data1,
+        labels = ~ category,
+        values = ~ value,
+        type = 'pie',
+        marker = list(colors = c("lightblue", "deepskyblue"))
+      ) %>%
+        layout(
+          title = paste0(
+            "Average Proportion of Labor Force in ",
+            clicked_state,
+            " for ",
+            selected_year
+          ),
+          margin = list(
+            t = 80,
+            b = 20,
+            l = 60,
+            r = 10
+          )
+        )
     })
     
-    # Render the second pie chart using plotly
+    # Render the second pie chart
     output$pieChart2 <- renderPlotly({
-      avg_labor_force <- round(mean(selected_data$`Total Civilian Labor Force in State/Area`))
-      avg_employed <- round(mean(selected_data$`Total Employment in State/Area`))
+      avg_labor_force <-
+        round(mean(selected_data$`Total Civilian Labor Force in State/Area`))
+      avg_employed <-
+        round(mean(selected_data$`Total Employment in State/Area`))
       avg_unemployed <- avg_labor_force - avg_employed
       pie_data2 <- data.frame(
         category = c("Employed", "Unemployed"),
         value = c(avg_employed, avg_unemployed)
       )
-      plot_ly(pie_data2, labels = ~category, values = ~value, type = 'pie', 
-              marker = list(colors = c("cornflowerblue", "midnightblue"))) %>%
-        layout(title = paste0("Average Employment Status in ", clicked_state, " for ", selected_year),
-               margin = list(t = 80, b = 20, l = 60, r = 10))
+      plot_ly(
+        pie_data2,
+        labels = ~ category,
+        values = ~ value,
+        type = 'pie',
+        marker = list(colors = c("cornflowerblue", "midnightblue"))
+      ) %>%
+        layout(
+          title = paste0(
+            "Average Employment Status in ",
+            clicked_state,
+            " for ",
+            selected_year
+          ),
+          margin = list(
+            t = 80,
+            b = 20,
+            l = 60,
+            r = 10
+          )
+        )
     })
     
     # Calculate the average unemployment rate for each year for the clicked state
     year_unemployment_rate <- data %>%
       filter(`State/Area` == clicked_state) %>%
       group_by(Year) %>%
-      summarize(Avg_Unemployment_Rate = round(mean(`Percent (%) of Labor Force Unemployed in State/Area`, na.rm = TRUE), 2))
+      summarize(Avg_Unemployment_Rate = round(
+        mean(`Percent (%) of Labor Force Unemployed in State/Area`, na.rm = TRUE),
+        2
+      ))
     
-    # Render the trend of average unemployment rate line chart using plotly
+    # Render the trend of average unemployment rate line chart
     output$overallUnemploymentRateChart <- renderPlotly({
-      plot_ly(year_unemployment_rate, x = ~Year, y = ~Avg_Unemployment_Rate, type = 'scatter', mode = 'lines+markers', line = list(color = "#1E90FF")) %>%
-        layout(title = paste0(clicked_state, " Overall Unemployment Rate"),
-               xaxis = list(title = "Year"),
-               yaxis = list(title = "Unemployment Rate (%)"),
-               margin = list(t = 80, b = 20, l = 60, r = 10))
+      plot_ly(
+        year_unemployment_rate,
+        x = ~ Year,
+        y = ~ Avg_Unemployment_Rate,
+        type = 'scatter',
+        mode = 'lines+markers',
+        line = list(color = "#1E90FF")
+      ) %>%
+        layout(
+          title = paste0(clicked_state, " Overall Unemployment Rate"),
+          xaxis = list(title = "Year"),
+          yaxis = list(title = "Unemployment Rate (%)"),
+          margin = list(
+            t = 80,
+            b = 20,
+            l = 60,
+            r = 10
+          )
+        )
     })
     
     
-    showModal(modalDialog(
-      title = paste0("Detailed Information for ", clicked_state),
-      plotlyOutput("lineChart"),
-      plotlyOutput("pieChart1"),
-      plotlyOutput("pieChart2"),
-      plotlyOutput("overallUnemploymentRateChart"), 
-      easyClose = TRUE,
-      footer = tagList(
-        modalButton("Close")
+    showModal(
+      modalDialog(
+        title = paste0("Detailed Information for ", clicked_state),
+        plotlyOutput("lineChart"),
+        plotlyOutput("pieChart1"),
+        plotlyOutput("pieChart2"),
+        plotlyOutput("overallUnemploymentRateChart"),
+        easyClose = TRUE,
+        footer = tagList(modalButton("Close"))
       )
-    ))
+    )
   })
   
 }
