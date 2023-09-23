@@ -27,8 +27,7 @@ data <- read_csv("data/Unemployment_in_America_Per_US_State.csv") %>%
 
 # Get the spatial data for US states
 states_sf <- ne_states(country = "United States of America", returnclass = "sf")
-states_sf <- st_as_sf(states_sf)
-states_sf <- st_simplify(states_sf, dTolerance=0.01)
+
 
 # UI
 ui <- fluidPage(
@@ -57,7 +56,6 @@ ui <- fluidPage(
       }
     ")
   ),
-  titlePanel(h1("Unemployment Rate in US", align="center")),
   
   # Custom CSS for the transparent dropdown menu
   tags$style(type = "text/css", "
@@ -71,12 +69,15 @@ ui <- fluidPage(
     }
   "))),
   
-  leafletOutput(outputId = "map", width = "100%", height = "91vh"),  # Set map width and height
+  leafletOutput(outputId = "map", width = "100%", height = "98vh"),  # Set map width and height
   
   # Absolute panel for dropdown menu
-  absolutePanel(id = "control-panel", top = 85, left = 70, width = 90, 
-                selectInput("selected_year", "Select Year:", choices = rev(unique(data$Year)))
+  absolutePanel(id = "control-panel", bottom = 10, left = 10, width = 200, 
+                div(class = "dropup",
+                    selectInput("selected_year", "Select Year:", choices = rev(unique(data$Year)))
+                )
   )
+  
 )
 
 # Server
