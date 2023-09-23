@@ -55,6 +55,15 @@ ui <- fluidPage(
         transform: translateX(-50%);
         right: 50% !important;
       }
+      #aboutBtn {
+            background-color: rgba(255, 255, 255, 0.7); 
+        }
+      .modal-backdrop {
+            opacity: 0.7 !important;  
+        }
+      .modal-content {
+          background-color: rgba(255, 255, 255, 0.8) !important;  
+      }
     ")),
     tags$script("
       function showDetails(stateName) {
@@ -80,7 +89,10 @@ ui <- fluidPage(
   # Absolute panel for dropdown menu
   absolutePanel(id = "control-panel", top = 15, left = 70, width = 80, 
                 selectInput("selected_year", "Select Year:", choices = rev(unique(data$Year)))
-  )
+  ),
+  
+  # About button to show About page
+  actionButton("aboutBtn", "About", style = "position: absolute; bottom: 13px; left: 10px;")
 )
 
 # Server
@@ -128,6 +140,41 @@ server <- function(input, output, session) {
         className = "map-title"
       )
   })
+  
+  observeEvent(input$aboutBtn, {
+    showModal(aboutModal())
+  })
+  
+  aboutModal <- function() {
+    modalDialog(
+      title = "About this App",
+      tagList(
+        tags$h4("GEOM90007 Assignment 2: Interactive Data Visualisation in R"),
+        tags$p("This Shiny app visualizes unemployment data in the US from 1976 to 2022."),
+        tags$hr(),
+        tags$h4("How to use this app?"),
+        tags$p("Select year to see the data in specified year."),
+        tags$p("Click the state area on the map to see the unemployment rate in selected year."),
+        tags$p("Click 'Details' to see the detailed unemployment information about this state."),
+        tags$h4("What do these charts mean?"),
+        tags$p("The 1st line chart shows the monthly unemployment population for the selected state and year."),
+        tags$p("The 1st pie chart provides the proportion of the labor force for the selected state and year."),
+        tags$p("The 2nd pie chart presents the employment status for the selected state and year."),
+        tags$p("The 2nd line chart illustrates the overall unemployment rate change of average unemployment rates over the years."),
+        tags$hr(),
+        tags$h4("Developed By"),
+        tags$p("Author: Hongda Zhu"),
+        tags$p("Institution: The University of Melbourne"),
+        tags$p("Student ID: 1259524"),
+        tags$p("Data Reference: https://www.kaggle.com/datasets/justin2028/unemployment-in-america-per-us-state"),
+      ),
+      easyClose = TRUE,
+      footer = tagList(
+        modalButton("Close")
+      )
+    )
+  }
+  
   
   # Observe the button click and display the modal dialog
   observeEvent(input$clickedState, {
