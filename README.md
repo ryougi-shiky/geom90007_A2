@@ -4,7 +4,7 @@ Objective:
 
 The primary goal of this application is to provide an interactive interface for users to explore and understand the unemployment trends in the US from 1976 to 2022.
 
-![instruction](https://github.com/ryougi-shiky/geom90007_A2/assets/53469345/41512148-3944-4f98-8c21-afa19160b336)
+![instruction](https://github.com/ryougi-shiky/geom90007_A2/assets/53469345/9e89f607-d174-41ec-913c-690376861796)
 
 
 Features:
