@@ -62,7 +62,7 @@ ui <- fluidPage(
     ),
     tags$script(
       "
-      /* Click area to get state name */
+      /* Click area to set state name */
       function showDetails(stateName) { 
         Shiny.setInputValue('clickedState', stateName);
       }
@@ -115,10 +115,8 @@ server <- function(input, output, session) {
     # Join the unemployment data with the spatial data
     map_data <-
       left_join(states_sf, data_selected_year, by = c("NAME" = "State/Area"))
-    # Set unemployment_rate_range
-    unemployment_rate_range <- c(0, 15)
     
-    # Adjust the colorQuantile function to use unemployment_rate_range
+    # Customise the colorQuantile function for reusing
     color_scale <- colorQuantile("Blues", map_data$`Percent (%) of Labor Force Unemployed in State/Area`, n = 5)
     
     leaflet(data = map_data) %>%
@@ -154,11 +152,6 @@ server <- function(input, output, session) {
           "\")'>Details</button>"
         )
       ) %>%
-      addLegend(pal = color_scale, 
-                values = ~`Percent (%) of Labor Force Unemployed in State/Area`,
-                title = "Unemployment Population",
-                position = "bottomright",
-                opacity = 1) %>%
     
       # Add map title
       addControl(
