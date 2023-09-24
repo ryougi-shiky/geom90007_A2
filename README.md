@@ -25,3 +25,18 @@ Data Sources:
 2. Bureau of Labor Statistics's Economic News Release on (Monthly) State Employment and Unemployment: This source provides monthly updates on unemployment rates.
 3. Bureau of Labor Statistics's State Employment and Unemployment Technical Note: This guide offers essential contextual knowledge needed to understand the dataset, including the methodology behind the data collection and definitions of the variables tracked.
 4. Link: https://www.kaggle.com/datasets/justin2028/unemployment-in-america-per-us-state
+
+
+Dataset Structure:
+
+- FIPS Code of State/Area
+- State/Area
+- Year
+- Month
+- Total Civilian Non-Institutional Population in State/Area
+- Total Civilian Labor Force in State/Area
+- Percent (%) of State/Area's Population
+- Total Employment in State/Area
+- Percent (%) of Labor Force Employed in State/Area
+- Total Unemployment in State/Area
+- Percent (%) of Labor Force Unemployed in State/Area
