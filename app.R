@@ -2,7 +2,7 @@ library(shiny) # Shiny app
 library(dplyr) # Manipulate data
 library(leaflet) # Draw map
 library(sf) # spatial data structure
-library(rnaturalearth) # Fetch spatial data
+library(spData) # Fetch spatial data
 library(readr) # Read data set
 library(shinyjs) # Use Javascript functions
 library(plotly) # Render interactive plots
@@ -11,8 +11,11 @@ library(plotly) # Render interactive plots
 data <- read_csv("data/Unemployment_in_America_Per_US_State.csv")
 
 # Get the spatial data for US states
-states_sf <-
-  ne_states(country = "United States of America", returnclass = "sf")
+states_sf <- us_states
+# Check columns names
+print(colnames(states_sf))
+# Transform the CRS of states_sf to WGS84
+states_sf <- st_transform(states_sf, 4326)
 
 # UI
 ui <- fluidPage(
@@ -111,8 +114,13 @@ server <- function(input, output, session) {
     
     # Join the unemployment data with the spatial data
     map_data <-
-      left_join(states_sf, data_selected_year, by = c("name" = "State/Area"))
-
+      left_join(states_sf, data_selected_year, by = c("NAME" = "State/Area"))
+    # Set unemployment_rate_range
+    unemployment_rate_range <- c(0, 15)
+    
+    # Adjust the colorQuantile function to use unemployment_rate_range
+    color_scale <- colorQuantile("Blues", map_data$`Percent (%) of Labor Force Unemployed in State/Area`, n = 5)
+    
     leaflet(data = map_data) %>%
       # Set map start view position and zoom status
       setView(lng = -98.583,
@@ -121,11 +129,8 @@ server <- function(input, output, session) {
       # Set map color theme
       addProviderTiles("CartoDB.Positron") %>%
       addPolygons(
-        fillColor = ~ colorQuantile(
-          "Blues",
-          `Percent (%) of Labor Force Unemployed in State/Area`,
-          n = 5
-        )(`Percent (%) of Labor Force Unemployed in State/Area`),
+        fillColor = ~color_scale(`Percent (%) of Labor Force Unemployed in State/Area`),
+        
         weight = 1,
         opacity = 1,
         color = "white",
@@ -139,17 +144,22 @@ server <- function(input, output, session) {
         # Click area, pop up the box to show state name and its Unemployment Rate
         popup = ~ paste0(
           "<strong>State:</strong> ",
-          name,
+          NAME,
           "<br>",
           "<strong>Unemployment Rate:</strong> ",
-          round(`Percent (%) of Labor Force Unemployed in State/Area`, 2),
+          `Percent (%) of Labor Force Unemployed in State/Area`,
           "%<br>",
           "<button onclick='showDetails(\"",
-          name,
+          NAME,
           "\")'>Details</button>"
         )
       ) %>%
-      
+      addLegend(pal = color_scale, 
+                values = ~`Percent (%) of Labor Force Unemployed in State/Area`,
+                title = "Unemployment Population",
+                position = "bottomright",
+                opacity = 1) %>%
+    
       # Add map title
       addControl(
         html = tags$div(style = "background-color: rgba(255, 255, 255, 0.6); padding: 5px; border-radius: 5px;
