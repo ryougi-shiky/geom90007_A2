@@ -22,7 +22,8 @@ Features:
 
 - At the bottom left of the map, there is an “About” button. Click the button, and pop up a window showing a brief introduction of this app, explanations of the charts, developer information, and data source reference.
 - The app’s color theme is blue, which is used to highlight valuable information in the whole map and all charts. Blue can suitably fit into the grey and white background color.
-- The pop-up windows, “About” button, and title have transparent backgrounds that make the interface more aesthetically appealing and more cohesive to the map.
+- The pop-up windows, “About” button and title have transparent backgrounds that make the interface more aesthetically appealing and more cohesive to the map.
+![instruction3](https://github.com/ryougi-shiky/geom90007_A2/assets/53469345/a26c1107-4ada-48dc-ad9d-8802689a8a08)
 
 
 Data Sources:
