@@ -4,6 +4,9 @@ Objective:
 
 The primary goal of this application is to provide an interactive interface for users to explore and understand the unemployment trends in the US from 1976 to 2022.
 
+![Uploading ezgif.com-video-to-gif.gif…]()
+
+
 Features:
 
 - The main part of the app is the interactive geographical map for the US that can help users focus on exploring the unemployment rate in different states. The interactive geographical map is powered by the Leaflet package which is an easier way to build a map by spatial data.
