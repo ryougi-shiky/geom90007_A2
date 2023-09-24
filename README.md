@@ -4,14 +4,14 @@ Objective:
 
 The primary goal of this application is to provide an interactive interface for users to explore and understand the unemployment trends in the US from 1976 to 2022.
 
-![instruction](https://github.com/ryougi-shiky/geom90007_A2/assets/53469345/9e89f607-d174-41ec-913c-690376861796)
-
-
 Features:
 
 - The main part of the app is the interactive geographical map for the US that can help users focus on exploring the unemployment rate in different states. The interactive geographical map is powered by the Leaflet package which is an easier way to build a map by spatial data.
 - At the top left of the map, there is a drop-down menu where users can select the year. Then the map can present the data for the selected year. The title of the map is shown at the top center.
 - Click the state area block, pop up a text box that displays the state name, the unemployment rate in the selected year, and a “Details" button to show more details.
+![instruction1](https://github.com/ryougi-shiky/geom90007_A2/assets/53469345/d6eb47c1-6ae0-43da-9642-f10f1d9224f2)
+
+
 - Click this “Details" button, and pop up a window that contains 4 charts. Plotly package is used to plot these interactive charts. When the mouse hovers over the chart, pop up a label to show the details information about the selected data. For example, displaying the specific unemployment population, rate, selected year, month, etc.
 - The 1st line chart shows the monthly unemployment population for the selected state and year. Users can see the change in the unemployment population this year.
 - The 1st pie chart provides the proportion of the labor force for the selected state and year. The average population in the selected year is used to plot the chart.
