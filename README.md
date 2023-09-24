@@ -17,6 +17,9 @@ Features:
 - The 1st pie chart provides the proportion of the labor force for the selected state and year. The average population in the selected year is used to plot the chart.
 - The 2nd pie chart presents the proportion of employment and unemployment population for the selected state and year. The average population in the selected year is used to plot the chart.
 - The 2nd line chart illustrates the overall unemployment rate change of average unemployment rates over the years.
+![instruction2](https://github.com/ryougi-shiky/geom90007_A2/assets/53469345/2fdaab9d-8a70-4550-94fe-13c17e6911ed)
+
+
 - At the bottom left of the map, there is an “About” button. Click the button, and pop up a window showing a brief introduction of this app, explanations of the charts, developer information, and data source reference.
 - The app’s color theme is blue, which is used to highlight valuable information in the whole map and all charts. Blue can suitably fit into the grey and white background color.
 - The pop-up windows, “About” button, and title have transparent backgrounds that make the interface more aesthetically appealing and more cohesive to the map.
