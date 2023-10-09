@@ -10,7 +10,7 @@ Features:
 - At the top left of the map, there is a drop-down menu where users can select the year. Then the map can present the data for the selected year. The title of the map is shown at the top center.
 - Click the state area block, pop up a text box that displays the state name, the unemployment rate in the selected year, and a “Details" button to show more details.
 
-![instruction1](https://github.com/ryougi-shiky/geom90007_A2/assets/53469345/d6eb47c1-6ae0-43da-9642-f10f1d9224f2)
+![instruction1](gif/instruction1.gif)
 
 
 - Click this “Details" button, and pop up a window that contains 4 charts. Plotly package is used to plot these interactive charts. When the mouse hovers over the chart, pop up a label to show the details information about the selected data. For example, displaying the specific unemployment population, rate, selected year, month, etc.
@@ -19,14 +19,14 @@ Features:
 - The 2nd pie chart presents the proportion of employment and unemployment population for the selected state and year. The average population in the selected year is used to plot the chart.
 - The 2nd line chart illustrates the overall unemployment rate change of average unemployment rates over the years.
 
-![instruction2](https://github.com/ryougi-shiky/geom90007_A2/assets/53469345/2fdaab9d-8a70-4550-94fe-13c17e6911ed)
+![instruction2](gif/instruction2.gif)
 
 
 - At the bottom left of the map, there is an “About” button. Click the button, and pop up a window showing a brief introduction of this app, explanations of the charts, developer information, and data source reference.
 - The app’s color theme is blue, which is used to highlight valuable information in the whole map and all charts. Blue can suitably fit into the grey and white background color.
 - The pop-up windows, “About” button and title have transparent backgrounds that make the interface more aesthetically appealing and more cohesive to the map.
 
-![instruction3](https://github.com/ryougi-shiky/geom90007_A2/assets/53469345/a26c1107-4ada-48dc-ad9d-8802689a8a08)
+![instruction3](gif/instruction3.gif)
 
 
 Data Sources:
